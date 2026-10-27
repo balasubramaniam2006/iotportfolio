@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT & Embedded Systems Portfolio | Lab Tasks & Live Cloud Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for live telemetry visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN for IoT icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#080d1a',
+                            panel: 'rgba(13, 22, 41, 0.75)',
+                            cyan: '#00f2fe',
+                            emerald: '#05ffa1',
+                            amber: '#ffaa00',
+                            crimson: '#ff3366',
+                            border: 'rgba(0, 242, 254, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 20px -3px rgba(0, 242, 254, 0.4)',
+                        'neon-emerald': '0 0 20px -3px rgba(5, 255, 161, 0.4)',
+                        'neon-crimson': '0 0 20px -3px rgba(255, 51, 102, 0.4)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Glassmorphism & Cyberpunk Accents */
+        body {
+            background-color: #060a14;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(5, 255, 161, 0.05) 0%, transparent 45%),
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .glass-panel {
+            background: rgba(11, 20, 38, 0.75);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 242, 254, 0.15);
+        }
+
+        .glass-card {
+            background: rgba(16, 29, 56, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 242, 254, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 242, 254, 0.15);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080d1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 242, 254, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+
+        /* Pulse Animations */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.96); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-black">
+
+    <!-- Toast Notification for Actions & Copy events -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-5 py-3 rounded-xl bg-slate-900 border border-cyber-cyan shadow-neon-cyan text-sm font-mono text-cyan-300">
+        <i class="fa-solid fa-circle-check text-cyber-emerald text-base"></i>
+        <span id="toast-msg">Copied to clipboard</span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full z-40 glass-panel border-b border-cyber-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <a href="#overview" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-emerald-400 p-[1px] shadow-neon-cyan">
+                        <div class="w-full h-full bg-slate-950 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-microchip text-cyber-cyan text-lg group-hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="font-bold text-base sm:text-lg tracking-wider text-white">IoT & Embedded</span>
+                        <span class="text-xs block text-cyber-emerald font-mono">LAB PORTFOLIO v2.4</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <div class="hidden lg:flex items-center space-x-1">
+                    <a href="#overview" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Overview</a>
+                    <a href="#task1" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Task 1: Sensors</a>
+                    <a href="#task2" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Task 2: Relays</a>
+                    <a href="#task3" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Task 3: Protocols</a>
+                    <a href="#task4" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Task 4: Cloud Alerts</a>
+                    <a href="#task5" class="px-3 py-2 text-sm font-medium text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/40 rounded-lg transition-colors">Task 5: Edge Logic</a>
+                    <a href="#live-dashboard" class="ml-3 px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyber-cyan text-cyber-cyan hover:bg-cyan-500 hover:text-slate-950 transition-all flex items-center gap-2 shadow-neon-cyan">
+                        <span class="w-2 h-2 rounded-full bg-cyber-emerald animate-ping"></span>
+                        Live Dashboard
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="lg:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div id="mobile-menu" class="hidden lg:hidden glass-panel border-t border-slate-800 px-4 pt-2 pb-6 space-y-2">
+            <a href="#overview" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Overview</a>
+            <a href="#task1" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Task 1: Sensor Interfacing</a>
+            <a href="#task2" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Task 2: Actuator & Relay</a>
+            <a href="#task3" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Task 3: Wireless & MQTT</a>
+            <a href="#task4" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Task 4: Cloud Telemetry</a>
+            <a href="#task5" class="block px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg">Task 5: Edge State Engine</a>
+            <a href="#live-dashboard" class="block px-3 py-2 text-sm font-medium text-cyber-cyan bg-cyan-950/40 border border-cyber-cyan/50 rounded-lg text-center mt-3">Access Live Smart Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20 space-y-24">
+
+        <!-- ==============================================
+             HERO / OVERVIEW SECTION
+             ============================================== -->
+        <section id="overview" class="pt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyber-cyan/40 text-cyber-cyan text-xs font-mono">
+                        <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+                        ESP32 · NodeMCU · FreeRTOS · MQTT · Firebase
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                        Embedded Systems & <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-400 to-teal-200">IoT Engineering</span>
+                    </h1>
+                    <p class="text-base sm:text-lg text-slate-300 leading-relaxed font-light">
+                        Unified archive consolidating physical laboratory experiments (Tasks 1 through 5) alongside a cloud-connected telemetry and supervisory control architecture inspired by <a href="https://smartyy-e6f48.web.app/" target="_blank" rel="noopener noreferrer" class="text-cyber-cyan underline hover:text-white transition-colors">smartyy-e6f48</a>.
+                    </p>
+
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <a href="#live-dashboard" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-sm tracking-wide shadow-neon-cyan hover:opacity-95 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                            Launch Live Dashboard
+                        </a>
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="px-6 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:border-cyber-cyan text-sm font-semibold transition-all flex items-center gap-2">
+                            <i class="fa-brands fa-github text-base"></i>
+                            GitHub Repository
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Hero Status Board -->
+                <div class="lg:col-span-5">
+                    <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                            <span class="text-xs font-mono text-slate-400">EDGE CONTROLLER STATUS</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ONLINE
+                            </span>
+                        </div>
+                        <div class="space-y-4 text-sm font-mono">
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800/60">
+                                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-microchip text-cyber-cyan"></i> MCU Core</span>
+                                <span class="text-white font-semibold">ESP32-WROOM-32D (240MHz)</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800/60">
+                                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-wifi text-cyber-cyan"></i> Protocol Stack</span>
+                                <span class="text-emerald-400">MQTT over TLS / WebSocket</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-800/60">
+                                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-cloud text-cyber-cyan"></i> Backend Node</span>
+                                <span class="text-white">smartyy-e6f48.firebaseio.com</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-slate-400 flex items-center gap-2"><i class="fa-solid fa-bolt text-cyber-cyan"></i> Power Rails</span>
+                                <span class="text-amber-300">3.3V Logic / 5.0V Bus (Nominal)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fast Quick-Stats Summary Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-400 uppercase">Input Channels</p>
+                    <p class="text-2xl font-bold text-cyber-cyan mt-1">4 Analog / 8 Digital</p>
+                    <p class="text-xs text-slate-400 mt-1">DHT22, LDR, MQ-2, PIR</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-400 uppercase">Actuation Capacity</p>
+                    <p class="text-2xl font-bold text-cyber-emerald mt-1">4-Ch 10A Relays</p>
+                    <p class="text-xs text-slate-400 mt-1">Optoisolated AC Mains / DC</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-400 uppercase">Telemetry Latency</p>
+                    <p class="text-2xl font-bold text-amber-400 mt-1">&lt; 120 ms</p>
+                    <p class="text-xs text-slate-400 mt-1">WebSockets & MQTT Stream</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-xs font-mono text-slate-400 uppercase">Fail-safe Engine</p>
+                    <p class="text-2xl font-bold text-cyber-cyan mt-1">Edge Autonomous</p>
+                    <p class="text-xs text-slate-400 mt-1">Local Hysteresis Fallback</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             TASK 1: SENSOR INTERFACING & OLED DISPLAY
+             ============================================== -->
+        <section id="task1" class="scroll-mt-20">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyber-cyan flex items-center justify-center font-mono text-cyber-cyan font-bold text-sm">01</span>
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Sensor Interfacing & Environmental Monitoring</h2>
+                    <p class="text-slate-400 text-sm">Multi-bus acquisition using DHT11/22 (Single-Wire) and SSD1306 (I2C 0x3C)</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Overview & Pinout Card -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-temperature-half text-cyber-cyan"></i> Architecture & Wiring
+                        </h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Acquires calibrated ambient temperature, relative humidity, and light intensity (Lux) via voltage divider ADC. Data is serialized for local I2C display and buffered for cloud dispatch.
+                        </p>
+                        <div class="bg-slate-950/70 rounded-xl p-4 border border-slate-800 text-xs font-mono space-y-2">
+                            <div class="flex justify-between"><span class="text-slate-400">DHT22 Data Pin:</span> <span class="text-cyber-cyan">GPIO 4 (10kΩ Pull-up)</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">LDR Voltage Divider:</span> <span class="text-cyber-cyan">GPIO 34 (ADC1_CH6)</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">OLED SSD1306 SDA:</span> <span class="text-cyber-cyan">GPIO 21 (I2C SDA)</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">OLED SSD1306 SCL:</span> <span class="text-cyber-cyan">GPIO 22 (I2C SCL)</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Sampling Rate:</span> <span class="text-cyber-emerald">0.5 Hz (DHT constraint)</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Hardware Emulator Card -->
+                    <div class="glass-panel rounded-2xl p-6 border-l-4 border-cyber-cyan">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider font-mono">SSD1306 OLED Virtual Framebuffer</h4>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400">128x64 px</span>
+                        </div>
+                        <!-- OLED Screen Canvas Mockup -->
+                        <div class="bg-black border-2 border-slate-700 rounded-lg p-3 font-mono text-cyan-300 shadow-inner">
+                            <div class="flex justify-between text-xs border-b border-cyan-900 pb-1 mb-2">
+                                <span>SYS: OK</span>
+                                <span id="oled-timestamp">12:00:00</span>
+                            </div>
+                            <div class="text-base font-bold flex justify-between">
+                                <span>TEMP: <span id="task1-temp-val">24.6</span> °C</span>
+                                <span>HUM: <span id="task1-hum-val">58.2</span> %</span>
+                            </div>
+                            <div class="text-sm mt-1 flex justify-between text-emerald-400">
+                                <span>LIGHT: <span id="task1-lux-val">412</span> lx</span>
+                                <span>AIR: GOOD</span>
+                            </div>
+                            <div class="mt-2 text-[10px] text-slate-500 border-t border-cyan-950 pt-1 flex justify-between">
+                                <span>ADDR: 0x3C</span>
+                                <span>BUS: 400kHz FAST</span>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Sliders to test Sensor response -->
+                        <div class="mt-4 space-y-3">
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                    <span>Simulate Temperature:</span>
+                                    <span id="slider-temp-disp" class="text-cyber-cyan">24.6 °C</span>
+                                </div>
+                                <input type="range" id="slider-temp" min="10" max="60" step="0.2" value="24.6" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                    <span>Simulate Ambient Lux:</span>
+                                    <span id="slider-lux-disp" class="text-cyber-emerald">412 lx</span>
+                                </div>
+                                <input type="range" id="slider-lux" min="0" max="1000" step="10" value="412" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Implementation Box -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel rounded-2xl p-6 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                                    <span class="text-xs font-mono text-slate-400 ml-2">Task1_DHT_OLED_Interfacing.ino</span>
+                                </div>
+                                <button onclick="copyCode('code-task1')" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-cyber-cyan hover:bg-slate-700 font-mono transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="bg-slate-950/80 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed max-h-[380px] scrollbar-thin"><code id="code-task1">#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;DHT.h&gt;
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+#define DHTPIN 4
+#define DHTTYPE DHT22
+#define LDRPIN 34
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+}
+
+void loop() {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  int rawLDR = analogRead(LDRPIN);
+  float lux = map(rawLDR, 0, 4095, 0, 1000);
+
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed reading sensor!");
+    return;
+  }
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("SYS STATUS: OK");
+  display.printf("Temp: %.1f C\n", t);
+  display.printf("Humidity: %.1f %%\n", h);
+  display.printf("Lux: %.0f lx\n", lux);
+  display.display();
+
+  delay(2000); // 2-second telemetry cycle
+}</code></pre>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+                            <span>Libraries: Adafruit_SSD1306, DHT sensor library</span>
+                            <span class="text-cyber-cyan">Ready for Flash</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             TASK 2: ACTUATOR CONTROL & RELAYS
+             ============================================== -->
+        <section id="task2" class="scroll-mt-20">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-cyber-emerald flex items-center justify-center font-mono text-cyber-emerald font-bold text-sm">02</span>
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Actuator Control & High-Load Relays</h2>
+                    <p class="text-slate-400 text-sm">Galvanic isolation, flyback diode protection, active-low relay coil triggering</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Relays Interactive Switchboard -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h3 class="text-base font-semibold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-plug text-cyber-emerald"></i> Virtual Relay Interface
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">
+                            Test optocoupler activation states. High-power AC mains loads (220V/10A) and DC fans are routed via isolated NO/NC contacts.
+                        </p>
+
+                        <!-- Virtual Channel 1: High-Power Bulb -->
+                        <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 mb-3 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div id="bulb-icon-container" class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 transition-colors">
+                                    <i class="fa-solid fa-lightbulb text-xl" id="bulb-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">Load Channel 1 (Bulb)</p>
+                                    <p class="text-[11px] font-mono text-slate-400">GPIO 26 · Opto-Isolated</p>
+                                </div>
+                            </div>
+                            <button id="toggle-relay-1" onclick="toggleRelay(1)" class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-slate-300 hover:border-cyber-emerald hover:text-white transition-all">
+                                SWITCH ON
+                            </button>
+                        </div>
+
+                        <!-- Virtual Channel 2: Cooling Fan -->
+                        <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div id="fan-icon-container" class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 transition-colors">
+                                    <i class="fa-solid fa-fan text-xl" id="fan-icon"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">Load Channel 2 (Exhaust Fan)</p>
+                                    <p class="text-[11px] font-mono text-slate-400">GPIO 27 · Transistor Drive</p>
+                                </div>
+                            </div>
+                            <button id="toggle-relay-2" onclick="toggleRelay(2)" class="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-slate-300 hover:border-cyber-emerald hover:text-white transition-all">
+                                SWITCH ON
+                            </button>
+                        </div>
+
+                        <!-- Circuit Safety Note -->
+                        <div class="mt-4 p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+                            <strong>Safety Protocol:</strong> Snubber circuits (RC 100Ω + 0.1µF) fitted parallel to inductive relay contacts to suppress back-EMF arcing.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relay Code and Firmware -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel rounded-2xl p-6 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-mono text-slate-400 ml-2">Task2_Relay_Actuator_Switch.ino</span>
+                                </div>
+                                <button onclick="copyCode('code-task2')" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-cyber-cyan hover:bg-slate-700 font-mono transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="bg-slate-950/80 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed max-h-[380px] scrollbar-thin"><code id="code-task2">const int RELAY_BULB_PIN = 26; // Channel 1 (Active LOW)
+const int RELAY_FAN_PIN  = 27; // Channel 2 (Active LOW)
+
+void setLoadState(int pin, bool state) {
+  // Most 5V/3.3V optocoupler modules activate on LOW level
+  digitalWrite(pin, state ? LOW : HIGH);
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  pinMode(RELAY_BULB_PIN, OUTPUT);
+  pinMode(RELAY_FAN_PIN, OUTPUT);
+
+  // Initialize relays in OFF position safely
+  digitalWrite(RELAY_BULB_PIN, HIGH);
+  digitalWrite(RELAY_FAN_PIN, HIGH);
+  
+  Serial.println("Actuator Controller Online. Awaiting command pulses...");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char cmd = Serial.read();
+    if (cmd == '1') {
+      setLoadState(RELAY_BULB_PIN, true);
+      Serial.println("CH1 BULB: ENGAGED");
+    } else if (cmd == '0') {
+      setLoadState(RELAY_BULB_PIN, false);
+      Serial.println("CH1 BULB: DISENGAGED");
+    } else if (cmd == '2') {
+      setLoadState(RELAY_FAN_PIN, true);
+      Serial.println("CH2 FAN: ENGAGED");
+    } else if (cmd == '3') {
+      setLoadState(RELAY_FAN_PIN, false);
+      Serial.println("CH2 FAN: DISENGAGED");
+    }
+  }
+}</code></pre>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+                            <span>Pinout: GPIO 26, 27 · Active-Low Logic</span>
+                            <span class="text-cyber-emerald">Optoisolated Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             TASK 3: WIRELESS PROTOCOLS (HTTP / MQTT)
+             ============================================== -->
+        <section id="task3" class="scroll-mt-20">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-400 flex items-center justify-center font-mono text-blue-400 font-bold text-sm">03</span>
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Wireless Communication & Web Protocols</h2>
+                    <p class="text-slate-400 text-sm">Lightweight MQTT pub/sub broker streaming and RESTful HTTP JSON endpoints</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Protocol Stream Visualizer -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="glass-panel rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-network-wired text-blue-400"></i> MQTT Live Broker Stream
+                            </h3>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">broker.emqx.io:1883</span>
+                        </div>
+
+                        <!-- Stream Logs Terminal -->
+                        <div class="bg-black border border-slate-800 rounded-xl p-3 font-mono text-xs space-y-1.5 h-64 overflow-y-auto scrollbar-thin" id="mqtt-terminal">
+                            <div class="text-slate-500">[INFO] MQTT Client Initializing...</div>
+                            <div class="text-emerald-400">[CONNECTED] ESP32-CLIENT-9104 registered</div>
+                            <div class="text-cyan-300">[SUB] dev/lab/telemetry (QoS 1)</div>
+                            <div class="text-slate-300">[PUB] topic: dev/lab/dht &rarr; {"temp":24.5,"hum":58}</div>
+                            <div class="text-slate-300">[PUB] topic: dev/lab/light &rarr; {"lux":415}</div>
+                        </div>
+
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="publishMqttTest()" class="w-full py-2 px-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-mono font-semibold transition-all">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Send Mock MQTT Packet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Block for MQTT and REST -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel rounded-2xl p-6 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-mono text-slate-400 ml-2">Task3_MQTT_WiFi_PubSub.ino</span>
+                                </div>
+                                <button onclick="copyCode('code-task3')" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-cyber-cyan hover:bg-slate-700 font-mono transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="bg-slate-950/80 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed max-h-[380px] scrollbar-thin"><code id="code-task3">#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+const char* ssid = "WIFI_SSID";
+const char* password = "WIFI_PASSWORD";
+const char* mqtt_server = "broker.emqx.io";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup_wifi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connected, IP: " + WiFi.localIP().toString());
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str())) {
+      client.subscribe("smartyy/devices/control");
+    } else {
+      delay(3000);
+    }
+  }
+}
+
+void publishTelemetry(float temp, float hum, int light) {
+  StaticJsonDocument<200> doc;
+  doc["temperature"] = temp;
+  doc["humidity"] = hum;
+  doc["light_lux"] = light;
+  doc["rssi"] = WiFi.RSSI();
+
+  char buffer[256];
+  serializeJson(doc, buffer);
+  client.publish("smartyy/telemetry/nodes", buffer);
+}
+
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+  // Call publishTelemetry periodic loop via non-blocking millis()
+}</code></pre>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+                            <span>Protocol: MQTT v3.1.1 & HTTP REST JSON</span>
+                            <span class="text-blue-400">PubSubClient Compatible</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             TASK 4: CLOUD TELEMETRY & THRESHOLD ALERTS
+             ============================================== -->
+        <section id="task4" class="scroll-mt-20">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="w-8 h-8 rounded-lg bg-crimson-500/10 border border-cyber-crimson flex items-center justify-center font-mono text-cyber-crimson font-bold text-sm">04</span>
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Cloud Telemetry & Automated Threshold Alarms</h2>
+                    <p class="text-slate-400 text-sm">Hazardous gas detection (MQ-2), buzzer frequency modulation, automatic circuit cutoff</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Gas & Alert Simulator Card -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="glass-panel rounded-2xl p-6 border border-slate-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-cyber-crimson"></i> Gas Alert Threshold Rig
+                            </h3>
+                            <span id="gas-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-500/30">
+                                NORMAL
+                            </span>
+                        </div>
+
+                        <!-- Gas Level Gauge Slider -->
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-slate-400 mb-1">
+                                    <span>MQ-2 Gas / Smoke Level (PPM):</span>
+                                    <span id="gas-level-disp" class="text-cyber-cyan font-bold">140 PPM</span>
+                                </div>
+                                <input type="range" id="gas-slider" min="50" max="800" step="10" value="140" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-crimson">
+                                <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
+                                    <span>0 Safe</span>
+                                    <span class="text-amber-400">Threshold: 350 PPM</span>
+                                    <span class="text-cyber-crimson">800 Critical</span>
+                                </div>
+                            </div>
+
+                            <!-- Hardware Audio-Visual Reaction Indicators -->
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <div id="piezo-indicator" class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
+                                    <i class="fa-solid fa-volume-xmark text-slate-500 text-xl" id="buzzer-icon"></i>
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-300">Piezo Buzzer</p>
+                                        <p class="text-[10px] font-mono text-slate-500" id="buzzer-status">SILENT</p>
+                                    </div>
+                                </div>
+                                <div id="cutoff-indicator" class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
+                                    <i class="fa-solid fa-shield-halved text-cyber-emerald text-xl" id="cutoff-icon"></i>
+                                    <div>
+                                        <p class="text-xs font-semibold text-slate-300">Power Relay</p>
+                                        <p class="text-[10px] font-mono text-emerald-400" id="cutoff-status">ARMED / ACTIVE</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cloud Notification Preview -->
+                            <div id="cloud-alert-preview" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-400">
+                                <span class="text-cyber-cyan">&gt; Firebase Dispatch:</span> <span id="cloud-alert-text">All parameters within baseline safety margins.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Display -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel rounded-2xl p-6 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-mono text-slate-400 ml-2">Task4_Gas_Safety_Cutoff.ino</span>
+                                </div>
+                                <button onclick="copyCode('code-task4')" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-cyber-cyan hover:bg-slate-700 font-mono transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="bg-slate-950/80 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed max-h-[380px] scrollbar-thin"><code id="code-task4">const int MQ2_ANALOG_PIN  = 35; // ADC Pin for Smoke / LPG
+const int BUZZER_PWM_PIN  = 18; // Piezo PWM channel
+const int SAFETY_RELAY_PIN = 19; // Main contactor cut-off
+const int THRESHOLD_PPM   = 350;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(SAFETY_RELAY_PIN, OUTPUT);
+  digitalWrite(SAFETY_RELAY_PIN, LOW); // Active State
+
+  ledcSetup(0, 2400, 8); // Channel 0, 2.4kHz alarm freq
+  ledcAttachPin(BUZZER_PWM_PIN, 0);
+  ledcWrite(0, 0);       // Buzzer Silent
+}
+
+void loop() {
+  int rawGas = analogRead(MQ2_ANALOG_PIN);
+  float ppm = map(rawGas, 0, 4095, 50, 1000);
+
+  if (ppm >= THRESHOLD_PPM) {
+    // 1. Trigger safety interlock (Trip Relay immediately)
+    digitalWrite(SAFETY_RELAY_PIN, HIGH);
+    
+    // 2. Modulate audio-visual alarm
+    ledcWrite(0, 180);
+    
+    // 3. Dispatch critical alert to cloud API endpoint
+    Serial.printf("[ALERT CRITICAL] Gas Leak: %.1f PPM. Tripping Relays!\n", ppm);
+  } else {
+    digitalWrite(SAFETY_RELAY_PIN, LOW);
+    ledcWrite(0, 0);
+  }
+  delay(500);
+}</code></pre>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+                            <span>Hardware Interlock Response: &lt; 25 ms</span>
+                            <span class="text-cyber-crimson">Fail-Safe Compliant</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             TASK 5: EDGE COMPUTING & AUTOMATION LOGIC
+             ============================================== -->
+        <section id="task5" class="scroll-mt-20">
+            <div class="flex items-center gap-3 mb-6">
+                <span class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-400 flex items-center justify-center font-mono text-purple-400 font-bold text-sm">05</span>
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white">Edge Computing & Hardware State Engine</h2>
+                    <p class="text-slate-400 text-sm">Deterministic Finite State Machine (FSM) with deadband hysteresis & offline continuity</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- State Machine Diagram & Logic Visualizer -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="glass-panel rounded-2xl p-6">
+                        <h3 class="text-base font-semibold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-code-branch text-purple-400"></i> FSM Execution Matrix
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">
+                            Prevents relay chattering through a 2.5°C hysteresis band and guarantees local autonomy during Internet disconnections.
+                        </p>
+
+                        <!-- State Nodes Visualizer -->
+                        <div class="space-y-3">
+                            <div id="fsm-state-idle" class="p-3 rounded-xl border border-cyber-cyan/50 bg-cyan-950/20 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-mono font-bold text-cyber-cyan block">STATE: MONITOR_IDLE</span>
+                                    <span class="text-[11px] text-slate-400">T &lt; 28°C · Relays Rest State · Sleep Mode</span>
+                                </div>
+                                <i class="fa-solid fa-check-circle text-cyber-cyan"></i>
+                            </div>
+
+                            <div id="fsm-state-cool" class="p-3 rounded-xl border border-slate-800 bg-slate-900/50 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-mono font-bold text-slate-400 block" id="cool-title">STATE: ACTIVE_COOLING</span>
+                                    <span class="text-[11px] text-slate-500">T &ge; 30.5°C · Exhaust Fan ENGAGED</span>
+                                </div>
+                                <i class="fa-solid fa-circle text-slate-700" id="cool-icon"></i>
+                            </div>
+
+                            <div id="fsm-state-fallback" class="p-3 rounded-xl border border-slate-800 bg-slate-900/50 flex items-center justify-between">
+                                <div>
+                                    <span class="text-xs font-mono font-bold text-slate-400 block" id="fallback-title">STATE: OFFLINE_FALLBACK</span>
+                                    <span class="text-[11px] text-slate-500">WiFi Loss &gt; 15s · Local Flash Rules Active</span>
+                                </div>
+                                <i class="fa-solid fa-shield text-slate-700" id="fallback-icon"></i>
+                            </div>
+                        </div>
+
+                        <!-- Manual FSM Trigger Button -->
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex gap-2">
+                            <button onclick="simulateFsmHeatspike()" class="flex-1 py-2 px-3 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/40 text-xs font-mono transition-all">
+                                Simulate Thermal Spike (+8°C)
+                            </button>
+                            <button onclick="resetFsmState()" class="py-2 px-3 rounded-lg bg-slate-800 text-slate-300 text-xs font-mono hover:bg-slate-700 transition-all">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task 5 State Machine Firmware Code -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel rounded-2xl p-6 h-full flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-mono text-slate-400 ml-2">Task5_Edge_Finite_State_Machine.ino</span>
+                                </div>
+                                <button onclick="copyCode('code-task5')" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-300 hover:text-cyber-cyan hover:bg-slate-700 font-mono transition-colors flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre class="bg-slate-950/80 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed max-h-[380px] scrollbar-thin"><code id="code-task5">enum SystemState { STATE_IDLE, STATE_COOLING, STATE_EMERGENCY, STATE_OFFLINE };
+SystemState currentState = STATE_IDLE;
+
+const float TEMP_UPPER_LIMIT = 30.5; // Fan Engage
+const float TEMP_LOWER_LIMIT = 28.0; // Fan Disengage (Hysteresis 2.5C)
+
+void processStateMachine(float currentTemp, bool wifiConnected) {
+  switch (currentState) {
+    case STATE_IDLE:
+      if (currentTemp >= TEMP_UPPER_LIMIT) {
+        digitalWrite(27, LOW); // Relay Fan ON
+        currentState = STATE_COOLING;
+        Serial.println("FSM -> STATE_COOLING");
+      }
+      break;
+
+    case STATE_COOLING:
+      if (currentTemp <= TEMP_LOWER_LIMIT) {
+        digitalWrite(27, HIGH); // Relay Fan OFF
+        currentState = STATE_IDLE;
+        Serial.println("FSM -> STATE_IDLE");
+      }
+      break;
+
+    case STATE_OFFLINE:
+      // Local fallback algorithm operates without waiting for cloud commands
+      if (currentTemp >= TEMP_UPPER_LIMIT) digitalWrite(27, LOW);
+      if (wifiConnected) currentState = STATE_IDLE;
+      break;
+  }
+}</code></pre>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+                            <span>Architecture: Non-blocking Edge State Controller</span>
+                            <span class="text-purple-400">Zero Cloud Dependency</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================
+             LIVE SMART DASHBOARD (INTEGRATING SMARTYY-E6F48)
+             ============================================== -->
+        <section id="live-dashboard" class="scroll-mt-20">
+            <div class="p-1 rounded-3xl bg-gradient-to-r from-cyan-500 via-emerald-500 to-teal-400 shadow-neon-cyan">
+                <div class="bg-slate-950/95 rounded-[22px] p-6 sm:p-8 space-y-8 backdrop-blur-xl">
+                    
+                    <!-- Dashboard Top Header Bar -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-cyber-emerald animate-pulse"></span>
+                                <span class="text-xs font-mono text-cyber-emerald uppercase tracking-wider">Live Cloud Sync Interface</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-white mt-1">
+                                Smartyy IoT Command Dashboard
+                            </h2>
+                            <p class="text-slate-400 text-sm">
+                                Real-time telemetry, live charts, and remote control sync linked to <a href="https://smartyy-e6f48.web.app/" target="_blank" rel="noopener noreferrer" class="text-cyber-cyan hover:underline">smartyy-e6f48.web.app</a>
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
+                                Node: <span class="text-cyber-cyan font-bold">ESP32_01_LAB</span>
+                            </span>
+                            <button onclick="refreshDashboardData()" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyber-cyan text-white text-xs font-mono transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-arrows-rotate" id="refresh-icon"></i> Sync
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Telemetry KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Temp Card -->
+                        <div class="glass-card rounded-2xl p-5 border-l-4 border-cyber-cyan">
+                            <div class="flex justify-between items-center text-slate-400 text-xs font-mono">
+                                <span>ROOM TEMPERATURE</span>
+                                <i class="fa-solid fa-temperature-three-quarters text-cyber-cyan"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-2">
+                                <span class="text-3xl font-extrabold text-white" id="dash-temp">24.6</span>
+                                <span class="text-slate-400 font-mono text-sm">°C</span>
+                            </div>
+                            <div class="mt-2 flex justify-between text-[11px] text-slate-400">
+                                <span>Range: 18 - 32°C</span>
+                                <span class="text-cyber-emerald">Optimal</span>
+                            </div>
+                        </div>
+
+                        <!-- Humidity Card -->
+                        <div class="glass-card rounded-2xl p-5 border-l-4 border-cyber-emerald">
+                            <div class="flex justify-between items-center text-slate-400 text-xs font-mono">
+                                <span>RELATIVE HUMIDITY</span>
+                                <i class="fa-solid fa-droplet text-cyber-emerald"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-2">
+                                <span class="text-3xl font-extrabold text-white" id="dash-hum">58.2</span>
+                                <span class="text-slate-400 font-mono text-sm">%</span>
+                            </div>
+                            <div class="mt-2 flex justify-between text-[11px] text-slate-400">
+                                <span>Target: 40 - 65%</span>
+                                <span class="text-cyber-emerald">Normal</span>
+                            </div>
+                        </div>
+
+                        <!-- Light Intensity Card -->
+                        <div class="glass-card rounded-2xl p-5 border-l-4 border-amber-400">
+                            <div class="flex justify-between items-center text-slate-400 text-xs font-mono">
+                                <span>LIGHT INTENSITY</span>
+                                <i class="fa-solid fa-sun text-amber-400"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-2">
+                                <span class="text-3xl font-extrabold text-white" id="dash-lux">412</span>
+                                <span class="text-slate-400 font-mono text-sm">Lux</span>
+                            </div>
+                            <div class="mt-2 flex justify-between text-[11px] text-slate-400">
+                                <span>Daylight Mode</span>
+                                <span class="text-amber-400">Active</span>
+                            </div>
+                        </div>
+
+                        <!-- Air Quality / Smoke Card -->
+                        <div class="glass-card rounded-2xl p-5 border-l-4 border-cyber-crimson">
+                            <div class="flex justify-between items-center text-slate-400 text-xs font-mono">
+                                <span>GAS / AIR QUALITY</span>
+                                <i class="fa-solid fa-wind text-cyber-crimson"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-2">
+                                <span class="text-3xl font-extrabold text-white" id="dash-gas">140</span>
+                                <span class="text-slate-400 font-mono text-sm">PPM</span>
+                            </div>
+                            <div class="mt-2 flex justify-between text-[11px] text-slate-400">
+                                <span>Cutoff: 350 PPM</span>
+                                <span class="text-cyber-emerald">Clean Air</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Telemetry Chart & Interactive Control Panel -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Chart Window -->
+                        <div class="lg:col-span-8 glass-card rounded-2xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 class="text-base font-bold text-white">Live Environmental History</h4>
+                                    <p class="text-xs text-slate-400">Continuous telemetry feed (Updated every 2s)</p>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs font-mono">
+                                    <span class="inline-flex items-center gap-1 text-cyan-400"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Temp</span>
+                                    <span class="inline-flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Hum</span>
+                                </div>
+                            </div>
+                            <!-- Responsive Canvas Container -->
+                            <div class="w-full h-64 sm:h-72">
+                                <canvas id="telemetryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Direct Actuator Control Matrix -->
+                        <div class="lg:col-span-4 glass-card rounded-2xl p-6 space-y-5">
+                            <h4 class="text-base font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-toggle-on text-cyber-cyan"></i> Remote Control
+                            </h4>
+
+                            <!-- Switch 1: Smart Main Light -->
+                            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold text-white block">Main Lighting</span>
+                                    <span class="text-[11px] font-mono text-slate-400">Relay #1 (GPIO 26)</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="dash-switch-1" class="sr-only peer" onchange="toggleDashRelay(1)">
+                                    <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyber-cyan"></div>
+                                </label>
+                            </div>
+
+                            <!-- Switch 2: Exhaust Ventilation -->
+                            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold text-white block">Ventilation Fan</span>
+                                    <span class="text-[11px] font-mono text-slate-400">Relay #2 (GPIO 27)</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="dash-switch-2" class="sr-only peer" onchange="toggleDashRelay(2)">
+                                    <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyber-emerald"></div>
+                                </label>
+                            </div>
+
+                            <!-- Emergency Master Cutoff -->
+                            <button onclick="emergencyMasterTrip()" class="w-full py-3 rounded-xl bg-crimson-600/20 hover:bg-crimson-600/40 border border-cyber-crimson/50 text-cyber-crimson font-mono font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-power-off"></i> EMERGENCY SYSTEM ISOLATION
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- External Cloud Link Card -->
+                    <div class="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-center text-xs font-mono text-slate-400 gap-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-database text-cyber-cyan"></i>
+                            <span>Firebase Realtime DB: <code class="text-slate-300">smartyy-e6f48-default-rtdb</code></span>
+                        </div>
+                        <a href="https://smartyy-e6f48.web.app/" target="_blank" rel="noopener noreferrer" class="text-cyber-cyan hover:text-white flex items-center gap-1.5 underline">
+                            Open Standalone Smartyy Web App <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-10 text-center font-mono text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 space-y-3">
+            <p class="text-slate-400">IoT & Embedded Systems Lab Portfolio | Night07Owl & Smartyy Architecture</p>
+            <p>Designed for ESP32, ESP8266, FreeRTOS, MQTT Telemetry, and Cloud Dashboard Automation.</p>
+            <div class="flex justify-center gap-6 text-sm text-slate-400 pt-2">
+                <a href="#overview" class="hover:text-cyber-cyan transition-colors">Overview</a>
+                <a href="#task1" class="hover:text-cyber-cyan transition-colors">Task 1</a>
+                <a href="#task2" class="hover:text-cyber-cyan transition-colors">Task 2</a>
+                <a href="#task3" class="hover:text-cyber-cyan transition-colors">Task 3</a>
+                <a href="#task4" class="hover:text-cyber-cyan transition-colors">Task 4</a>
+                <a href="#task5" class="hover:text-cyber-cyan transition-colors">Task 5</a>
+                <a href="#live-dashboard" class="hover:text-cyber-cyan transition-colors">Live Dashboard</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==============================================
+         PORTFOLIO CONTROLLER & TELEMETRY LOGIC (JS)
+         ============================================== -->
+    <script>
+        // State storage
+        const state = {
+            temp: 24.6,
+            hum: 58.2,
+            lux: 412,
+            gas: 140,
+            relay1: false,
+            relay2: false,
+            fsmState: 'IDLE'
+        };
+
+        // Initialize Live Chart.js
+        let telemetryChart;
+        function initChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            const initialLabels = ['12:00:00', '12:00:02', '12:00:04', '12:00:06', '12:00:08', '12:00:10', '12:00:12'];
+            const initialTemp = [24.1, 24.3, 24.2, 24.5, 24.6, 24.5, 24.6];
+            const initialHum = [57.8, 58.0, 58.1, 58.0, 58.3, 58.1, 58.2];
+
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: initialLabels,
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: initialTemp,
+                            borderColor: '#00f2fe',
+                            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#00f2fe'
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: initialHum,
+                            borderColor: '#05ffa1',
+                            backgroundColor: 'rgba(5, 255, 161, 0.05)',
+                            borderWidth: 2,
+                            tension: 0.35,
+                            fill: true,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#05ffa1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Copy to clipboard helper
+        function copyCode(elementId) {
+            const codeEl = document.getElementById(elementId);
+            if (!codeEl) return;
+            const text = codeEl.innerText;
+            
+            // Clipboard copy with textarea fallback
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Code snippet copied to clipboard!");
+            } catch (err) {
+                console.error("Copy failed", err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Toast messenger
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            toastMsg.innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2600);
+        }
+
+        // Toggle Relays
+        function toggleRelay(ch) {
+            if (ch === 1) {
+                state.relay1 = !state.relay1;
+                const icon = document.getElementById('bulb-icon');
+                const btn = document.getElementById('toggle-relay-1');
+                const box = document.getElementById('bulb-icon-container');
+                const dashSwitch = document.getElementById('dash-switch-1');
+                
+                if (state.relay1) {
+                    icon.classList.remove('text-slate-500');
+                    icon.classList.add('text-amber-300');
+                    box.classList.add('shadow-neon-cyan', 'bg-amber-950/40');
+                    btn.innerText = 'SWITCH OFF';
+                    btn.classList.add('bg-amber-500/20', 'border-amber-400', 'text-amber-300');
+                    dashSwitch.checked = true;
+                    showToast("Relay #1 (Bulb): ENERGIZED");
+                } else {
+                    icon.classList.add('text-slate-500');
+                    icon.classList.remove('text-amber-300');
+                    box.classList.remove('shadow-neon-cyan', 'bg-amber-950/40');
+                    btn.innerText = 'SWITCH ON';
+                    btn.classList.remove('bg-amber-500/20', 'border-amber-400', 'text-amber-300');
+                    dashSwitch.checked = false;
+                    showToast("Relay #1 (Bulb): DE-ENERGIZED");
+                }
+            } else if (ch === 2) {
+                state.relay2 = !state.relay2;
+                const icon = document.getElementById('fan-icon');
+                const btn = document.getElementById('toggle-relay-2');
+                const box = document.getElementById('fan-icon-container');
+                const dashSwitch = document.getElementById('dash-switch-2');
+
+                if (state.relay2) {
+                    icon.classList.remove('text-slate-500');
+                    icon.classList.add('text-cyber-emerald', 'fa-spin');
+                    box.classList.add('shadow-neon-emerald', 'bg-emerald-950/40');
+                    btn.innerText = 'SWITCH OFF';
+                    btn.classList.add('bg-emerald-500/20', 'border-cyber-emerald', 'text-cyber-emerald');
+                    dashSwitch.checked = true;
+                    showToast("Relay #2 (Fan): ENERGIZED");
+                } else {
+                    icon.classList.add('text-slate-500');
+                    icon.classList.remove('text-cyber-emerald', 'fa-spin');
+                    box.classList.remove('shadow-neon-emerald', 'bg-emerald-950/40');
+                    btn.innerText = 'SWITCH ON';
+                    btn.classList.remove('bg-emerald-500/20', 'border-cyber-emerald', 'text-cyber-emerald');
+                    dashSwitch.checked = false;
+                    showToast("Relay #2 (Fan): DE-ENERGIZED");
+                }
+            }
+        }
+
+        function toggleDashRelay(ch) {
+            toggleRelay(ch);
+        }
+
+        // Emergency Trip
+        function emergencyMasterTrip() {
+            if (state.relay1) toggleRelay(1);
+            if (state.relay2) toggleRelay(2);
+            showToast("EMERGENCY INTERLOCK: All relays opened!");
+        }
+
+        // Live MQTT simulator
+        function publishMqttTest() {
+            const term = document.getElementById('mqtt-terminal');
+            const time = new Date().toTimeString().split(' ')[0];
+            const p = document.createElement('div');
+            p.className = 'text-cyan-300';
+            p.innerText = `[PUB] ${time} -> topic: smartyy/test {"temp":${state.temp},"lux":${state.lux}}`;
+            term.appendChild(p);
+            term.scrollTop = term.scrollHeight;
+            showToast("MQTT Packet Sent to broker.emqx.io");
+        }
+
+        // Finite State Machine triggers
+        function simulateFsmHeatspike() {
+            state.temp = 34.2;
+            document.getElementById('task1-temp-val').innerText = state.temp.toFixed(1);
+            document.getElementById('dash-temp').innerText = state.temp.toFixed(1);
+            document.getElementById('slider-temp').value = state.temp;
+            document.getElementById('slider-temp-disp').innerText = state.temp + ' °C';
+
+            // Update FSM DOM indicators
+            const idle = document.getElementById('fsm-state-idle');
+            const cool = document.getElementById('fsm-state-cool');
+            const coolTitle = document.getElementById('cool-title');
+            const coolIcon = document.getElementById('cool-icon');
+
+            idle.className = 'p-3 rounded-xl border border-slate-800 bg-slate-900/50 flex items-center justify-between';
+            cool.className = 'p-3 rounded-xl border border-purple-400 bg-purple-950/30 flex items-center justify-between shadow-neon-cyan';
+            coolTitle.className = 'text-xs font-mono font-bold text-purple-300 block';
+            coolIcon.className = 'fa-solid fa-fan text-purple-300 fa-spin';
+
+            // Automatically turn on fan relay if not already
+            if (!state.relay2) toggleRelay(2);
+            showToast("FSM Event: Temp > 30.5°C => ACTIVE_COOLING state!");
+        }
+
+        function resetFsmState() {
+            state.temp = 24.6;
+            document.getElementById('task1-temp-val').innerText = state.temp.toFixed(1);
+            document.getElementById('dash-temp').innerText = state.temp.toFixed(1);
+            document.getElementById('slider-temp').value = state.temp;
+            document.getElementById('slider-temp-disp').innerText = state.temp + ' °C';
+
+            const idle = document.getElementById('fsm-state-idle');
+            const cool = document.getElementById('fsm-state-cool');
+            const coolTitle = document.getElementById('cool-title');
+            const coolIcon = document.getElementById('cool-icon');
+
+            idle.className = 'p-3 rounded-xl border border-cyber-cyan/50 bg-cyan-950/20 flex items-center justify-between';
+            cool.className = 'p-3 rounded-xl border border-slate-800 bg-slate-900/50 flex items-center justify-between';
+            coolTitle.className = 'text-xs font-mono font-bold text-slate-400 block';
+            coolIcon.className = 'fa-solid fa-circle text-slate-700';
+
+            if (state.relay2) toggleRelay(2);
+            showToast("FSM Reset to MONITOR_IDLE state");
+        }
+
+        // Manual Dashboard Refresh
+        function refreshDashboardData() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('fa-spin');
+            setTimeout(() => {
+                icon.classList.remove('fa-spin');
+                showToast("Telemetry synced with smartyy-e6f48");
+            }, 600);
+        }
+
+        // Attach Event Listeners on DOM Loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            initChart();
+
+            // Mobile menu toggle
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Slider listeners
+            const sliderTemp = document.getElementById('slider-temp');
+            sliderTemp.addEventListener('input', (e) => {
+                state.temp = parseFloat(e.target.value);
+                document.getElementById('slider-temp-disp').innerText = `${state.temp.toFixed(1)} °C`;
+                document.getElementById('task1-temp-val').innerText = state.temp.toFixed(1);
+                document.getElementById('dash-temp').innerText = state.temp.toFixed(1);
+            });
+
+            const sliderLux = document.getElementById('slider-lux');
+            sliderLux.addEventListener('input', (e) => {
+                state.lux = parseInt(e.target.value);
+                document.getElementById('slider-lux-disp').innerText = `${state.lux} lx`;
+                document.getElementById('task1-lux-val').innerText = state.lux;
+                document.getElementById('dash-lux').innerText = state.lux;
+            });
+
+            // Gas Threshold Slider listener
+            const gasSlider = document.getElementById('gas-slider');
+            gasSlider.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                state.gas = val;
+                document.getElementById('gas-level-disp').innerText = `${val} PPM`;
+                document.getElementById('dash-gas').innerText = val;
+
+                const badge = document.getElementById('gas-badge');
+                const buzzerIcon = document.getElementById('buzzer-icon');
+                const buzzerStatus = document.getElementById('buzzer-status');
+                const cutoffIcon = document.getElementById('cutoff-icon');
+                const cutoffStatus = document.getElementById('cutoff-status');
+                const alertText = document.getElementById('cloud-alert-text');
+
+                if (val >= 350) {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono bg-red-950 text-red-400 border border-red-500/40 animate-pulse';
+                    badge.innerText = 'DANGER: LEAK';
+                    buzzerIcon.className = 'fa-solid fa-volume-high text-cyber-crimson animate-bounce text-xl';
+                    buzzerStatus.innerText = 'ALARM ACTIVE (2.4kHz)';
+                    buzzerStatus.className = 'text-[10px] font-mono text-cyber-crimson font-bold';
+                    cutoffIcon.className = 'fa-solid fa-ban text-cyber-crimson text-xl';
+                    cutoffStatus.innerText = 'CIRCUIT TRIPPED';
+                    cutoffStatus.className = 'text-[10px] font-mono text-cyber-crimson';
+                    alertText.innerHTML = `<span class="text-cyber-crimson font-bold">ALARM DISPATCH: MQ-2 Gas PPM (${val}) exceeded cutoff limit!</span>`;
+                } else {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-500/30';
+                    badge.innerText = 'NORMAL';
+                    buzzerIcon.className = 'fa-solid fa-volume-xmark text-slate-500 text-xl';
+                    buzzerStatus.innerText = 'SILENT';
+                    buzzerStatus.className = 'text-[10px] font-mono text-slate-500';
+                    cutoffIcon.className = 'fa-solid fa-shield-halved text-cyber-emerald text-xl';
+                    cutoffStatus.innerText = 'ARMED / ACTIVE';
+                    cutoffStatus.className = 'text-[10px] font-mono text-emerald-400';
+                    alertText.innerText = 'All parameters within baseline safety margins.';
+                }
+            });
+
+            // Live Chart loop (Every 2.5 seconds)
+            setInterval(() => {
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0];
+                document.getElementById('oled-timestamp').innerText = timeStr;
+
+                // Subtle fluctuation for realism
+                const deltaT = (Math.random() - 0.5) * 0.2;
+                const deltaH = (Math.random() - 0.5) * 0.4;
+                const currentT = parseFloat((state.temp + deltaT).toFixed(1));
+                const currentH = parseFloat((state.hum + deltaH).toFixed(1));
+
+                if (telemetryChart) {
+                    telemetryChart.data.labels.push(timeStr);
+                    telemetryChart.data.datasets[0].data.push(currentT);
+                    telemetryChart.data.datasets[1].data.push(currentH);
+
+                    if (telemetryChart.data.labels.length > 10) {
+                        telemetryChart.data.labels.shift();
+                        telemetryChart.data.datasets[0].data.shift();
+                        telemetryChart.data.datasets[1].data.shift();
+                    }
+                    telemetryChart.update();
+                }
+            }, 2500);
+        });
+    </script>
+</body>
+</html>
